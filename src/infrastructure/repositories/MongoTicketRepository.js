@@ -28,7 +28,7 @@ class MongoTicketRepository {
   // Este lo dejamos devolviendo el objeto plano/populado porque tu caso de uso "GetTicketById"
   // ya se encarga de transformarlo a un DTO específico con nombres de cliente, evento, etc.
   async findByIdWithDetails(ticketId) {
-    return this.model.findById(ticketId)
+    return await this.model.findById(ticketId)
       .populate({ path: 'id_event', populate: { path: 'id_venue' } })
       .populate('id_customer');
   }
@@ -88,7 +88,7 @@ class MongoTicketRepository {
   }
 
   async findByCustomer(customerId) {
-    return this.model.find({ id_customer: customerId, status: Ticket.SOLD })
+    return await this.model.find({ id_customer: customerId, status: Ticket.SOLD })
       .populate({ path: 'id_event', populate: { path: 'id_venue' } })
       .sort({ _id: -1 });
   }

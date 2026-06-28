@@ -4,7 +4,7 @@ class MongoUserRepository {
   }
 
   async findByEmailAndRole(email, role) {
-    return this.model.findOne({ email, role })
+    return await this.model.findOne({ email, role })
   }
 }
 

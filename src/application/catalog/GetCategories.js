@@ -4,7 +4,7 @@ class GetCategories {
   }
 
   async execute() {
-    return this.categoryRepo.findAll()
+    return await this.categoryRepo.findAll()
   }
 }
 

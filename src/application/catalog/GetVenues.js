@@ -4,7 +4,7 @@ class GetVenues {
   }
 
   async execute() {
-    return this.venueRepo.findAll()
+    return await this.venueRepo.findAll()
   }
 }
 
