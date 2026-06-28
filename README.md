@@ -93,6 +93,20 @@ Interactive docs available at `/api-docs` (Swagger UI).
 
 ---
 
+## Async / Non-blocking I/O
+
+This project uses Node.js's single-threaded, non-blocking event loop throughout the entire request lifecycle. Every I/O operation — HTTP request handling, database queries, and business-logic orchestration — is written with `async/await` so that Node.js never blocks while waiting for a response.
+
+The pattern is applied at all three layers:
+
+- **Interfaces (HTTP handlers)** — every Express route callback is declared `async`. The handler `await`s the use-case result before writing the HTTP response, so the event loop remains free to process other requests while the DB query is in flight.
+- **Application (use cases)** — each `execute()` method is `async` and explicitly `await`s every repository call. Errors surface naturally through the `async` call stack and are caught by the route handler's `try/catch`.
+- **Infrastructure (repositories)** — every Mongoose operation (`find`, `findOne`, `findById`, `create`, `findByIdAndUpdate`, `insertMany`) is `await`ed before returning, so the Promise is fully resolved within the async function and the stack trace is preserved on rejection.
+
+This means a single Node.js process can serve hundreds of concurrent ticket-purchase requests without spawning threads, because the event loop is released back to the runtime at every `await` boundary.
+
+---
+
 ## Stack
 
 | Layer | Technology |
