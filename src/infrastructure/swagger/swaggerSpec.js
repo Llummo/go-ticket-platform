@@ -186,6 +186,33 @@ const swaggerSpec = {
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: "Customer's ticket list" } }
       }
+    },
+    '/api/events/{id}/posts': {
+      get: {
+        summary: 'Get event forum posts',
+        tags: ['Social'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of posts' } }
+      },
+      post: {
+        summary: 'Create a new post/review',
+        tags: ['Social'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  content: { type: 'string', example: 'Amazing concert!' },
+                  rating: { type: 'number', example: 5 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Post created successfully' } }
+      }
     }
   }
 }
