@@ -4,7 +4,7 @@ class MongoPaymentRepository {
   }
 
   async create(data) {
-    return this.model.create(data)
+    return await this.model.create(data)
   }
 }
 
