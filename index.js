@@ -47,6 +47,22 @@ const { createServer } = require('./src/interfaces/http/server')
 const main = async () => {
   await connect()
 
+  const bcrypt = require('bcrypt');
+  const adminEmail = 'admin@test.com';
+  const existingAdmin = await UserModel.findOne({ email: adminEmail });
+
+  if (!existingAdmin) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('1234', salt);
+    await UserModel.create({
+      email: adminEmail,
+      name: 'Super Admin',
+      password: hashedPassword,
+      role: 'admin'
+    });
+    console.log('Default admin account created.');
+  }
+
   // Repos
   const userRepo = new MongoUserRepository(UserModel)
   const venueRepo = new MongoVenueRepository(VenueModel)

@@ -30,6 +30,31 @@ const swaggerSpec = {
         }
       }
     },
+    '/api/auth/register': {
+      post: {
+        summary: 'Register new client',
+        tags: ['Auth'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  email: { type: 'string', example: 'nuevo@cliente.com' },
+                  name: { type: 'string', example: 'Juan Pérez' },
+                  password: { type: 'string', example: '123456' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Usuario registrado con éxito' },
+          400: { description: 'Error de validación o correo duplicado' }
+        }
+      }
+    },
     '/api/venues': {
       get: {
         summary: 'List all venues',

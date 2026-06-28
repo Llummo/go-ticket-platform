@@ -1,11 +1,16 @@
 const mongoose = require('mongoose')
 
-const mongoURI = 'mongodb://admin:secreta@localhost:27017/goticket_social?authSource=admin'
+const mongoURI = 'mongodb://localhost:27017/goticket_social'
 
 const connect = async () => {
   mongoose.set('bufferCommands', false)
-  await mongoose.connect(mongoURI)
-  console.log('¡Conexión exitosa a MongoDB (Contenedor Docker)!')
+  try {
+    await mongoose.connect(mongoURI)
+    console.log('Successful local DB connection')
+  } catch (error) {
+    console.error('Failed local DB connection:', error.message)
+    process.exit(1)
+  }
 }
 
 module.exports = { connect }

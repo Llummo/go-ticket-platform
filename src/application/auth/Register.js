@@ -5,7 +5,8 @@ class Register {
     this.userRepo = userRepo
   }
 
-  async execute({ email, name, password, role = 'cliente' }) {
+  async execute({ email, name, password }) { 
+    const role = 'cliente';
     const existingUser = await this.userRepo.findByEmail(email)
     if (existingUser) throw new Error('El correo ya está registrado')
 
