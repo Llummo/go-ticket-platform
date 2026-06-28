@@ -1,0 +1,1462 @@
+============================================================
+PROJECT TREE
+============================================================
+
+├── public
+│   ├── stylesheets
+│   │   └── style.css
+│   └── index.html
+├── routes
+│   ├── index.js
+│   └── users.js
+├── src
+│   ├── application
+│   │   ├── admin
+│   │   │   └── GetTransactions.js
+│   │   ├── auth
+│   │   │   └── Login.js
+│   │   ├── catalog
+│   │   │   ├── GetCategories.js
+│   │   │   └── GetVenues.js
+│   │   ├── event
+│   │   │   ├── CreateEventWithTickets.js
+│   │   │   ├── GetEvents.js
+│   │   │   └── UpdateEvent.js
+│   │   ├── purchase
+│   │   │   └── PurchaseTicket.js
+│   │   └── ticket
+│   │       ├── GetCustomerTickets.js
+│   │       ├── GetTicketById.js
+│   │       └── GetTicketsByEvent.js
+│   ├── domain
+│   │   ├── Category.js
+│   │   ├── Event.js
+│   │   ├── History.js
+│   │   ├── Payment.js
+│   │   ├── Ticket.js
+│   │   ├── User.js
+│   │   └── Venue.js
+│   ├── infrastructure
+│   │   ├── db
+│   │   │   ├── models
+│   │   │   │   ├── CategoryModel.js
+│   │   │   │   ├── EventModel.js
+│   │   │   │   ├── HistoryModel.js
+│   │   │   │   ├── PaymentModel.js
+│   │   │   │   ├── TicketModel.js
+│   │   │   │   ├── UserModel.js
+│   │   │   │   └── VenueModel.js
+│   │   │   └── connection.js
+│   │   ├── repositories
+│   │   │   ├── MongoCategoryRepository.js
+│   │   │   ├── MongoEventRepository.js
+│   │   │   ├── MongoHistoryRepository.js
+│   │   │   ├── MongoPaymentRepository.js
+│   │   │   ├── MongoTicketRepository.js
+│   │   │   ├── MongoUserRepository.js
+│   │   │   └── MongoVenueRepository.js
+│   │   └── swagger
+│   │       └── swaggerSpec.js
+│   └── interfaces
+│       └── http
+│           ├── adminRoutes.js
+│           ├── authRoutes.js
+│           ├── catalogRoutes.js
+│           ├── eventRoutes.js
+│           ├── purchaseRoutes.js
+│           ├── server.js
+│           └── ticketRoutes.js
+├── .gitignore
+├── app.js
+├── go-ticket-platform.iml
+├── index.js
+├── package-lock.json
+├── package.json
+└── README.md
+
+
+============================================================
+FILES
+============================================================
+
+============================================================
+README.md
+============================================================
+
+# GoTicket Platform
+
+A Node.js + Express + MongoDB ticket sales platform built with a lightweight DDD (Domain-Driven Design) architecture.
+
+---
+
+## Architecture
+
+The project is organized into 4 layers. Dependencies only point inward — interfaces know about application, application knows about domain, domain knows about nothing.
+
+```
+src/
+├── domain/            # Plain JS classes, zero dependencies
+├── application/       # Use cases, one class per operation
+├── infrastructure/    # Mongoose models, repositories, DB connection
+└── interfaces/
+    └── http/          # Express routers + server setup
+index.js               # Wires all layers together
+```
+
+### Domain
+Pure business entities with no framework dependencies. Constructors enforce business rules and throw errors if invariants are violated.
+
+- `User` — platform user (customer, organizer, admin)
+- `Venue` — physical location for events
+- `Category` — event category
+- `Event` — event with title, date, venue, category and organizer
+- `Ticket` — seat with row, seat number, price and status (`AVAILABLE` / `SOLD`)
+- `Payment` — payment record linked to a ticket purchase
+- `History` — audit log of ticket actions
+
+### Application
+One class per use case. Each class receives its repositories via constructor (dependency injection) and calls no framework code.
+
+| Use Case | Description |
+|---|---|
+| `Login` | Authenticate user by email and role |
+| `GetVenues` | List all venues |
+| `GetCategories` | List all categories |
+| `GetEvents` | List all events with venue and category details |
+| `CreateEventWithTickets` | Create an event and auto-generate 40 seats (rows A–D, seats 1–10) |
+| `UpdateEvent` | Update event title, description or date |
+| `GetTicketsByEvent` | List all tickets for a given event |
+| `GetTicketById` | Get full detail of a single ticket |
+| `GetCustomerTickets` | List all purchased tickets for a customer |
+| `PurchaseTicket` | Process payment, mark ticket as SOLD, log to history |
+| `GetTransactions` | List all transactions (admin) |
+
+### Infrastructure
+Mongoose schemas and thin repository classes that wrap them. The application layer only sees the repository interface, never Mongoose directly.
+
+```
+infrastructure/
+├── db/
+│   ├── connection.js        # MongoDB connection
+│   └── models/              # 7 Mongoose schemas
+└── repositories/            # 7 repository classes (MongoXxxRepository)
+```
+
+### Interfaces
+Express routers. Each router file exports a factory function that receives the relevant use cases as arguments. No business logic lives here — only HTTP parsing and response formatting.
+
+```
+interfaces/http/
+├── server.js           # Express app setup, CORS, static files, Swagger mount
+├── authRoutes.js
+├── catalogRoutes.js
+├── eventRoutes.js
+├── ticketRoutes.js
+├── purchaseRoutes.js
+└── adminRoutes.js
+```
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login |
+| GET | `/api/venues` | List venues |
+| GET | `/api/categories` | List categories |
+| GET | `/api/events` | List events |
+| POST | `/api/admin/events-with-tickets` | Create event + auto-generate tickets |
+| PUT | `/api/events/:id` | Update event |
+| GET | `/api/events/:id/tickets` | Tickets for an event |
+| GET | `/api/tickets/:id` | Single ticket detail |
+| POST | `/api/purchase` | Purchase a ticket |
+| GET | `/api/admin/transactions` | All transactions |
+| GET | `/api/customer/:id/tickets` | Customer's purchased tickets |
+
+Interactive docs available at `/api-docs` (Swagger UI).
+
+---
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js |
+| HTTP | Express |
+| Database | MongoDB + Mongoose |
+| Docs | Swagger UI Express |
+
+---
+
+## Running locally
+
+1. Install [MongoDB Community](https://www.mongodb.com/try/download/community) and start the service
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the server:
+   ```bash
+   npm start
+   ```
+4. Server runs on `http://localhost:3000`
+5. Swagger UI at `http://localhost:3000/api-docs`
+
+
+============================================================
+app.js
+============================================================
+
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
+
+var app = express();
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+module.exports = app;
+
+
+============================================================
+index.js
+============================================================
+
+global.crypto = require('crypto')
+
+const { connect } = require('./src/infrastructure/db/connection')
+
+// Models
+const UserModel = require('./src/infrastructure/db/models/UserModel')
+const VenueModel = require('./src/infrastructure/db/models/VenueModel')
+const CategoryModel = require('./src/infrastructure/db/models/CategoryModel')
+const EventModel = require('./src/infrastructure/db/models/EventModel')
+const PaymentModel = require('./src/infrastructure/db/models/PaymentModel')
+const TicketModel = require('./src/infrastructure/db/models/TicketModel')
+const HistoryModel = require('./src/infrastructure/db/models/HistoryModel')
+
+// Repositories
+const MongoUserRepository = require('./src/infrastructure/repositories/MongoUserRepository')
+const MongoVenueRepository = require('./src/infrastructure/repositories/MongoVenueRepository')
+const MongoCategoryRepository = require('./src/infrastructure/repositories/MongoCategoryRepository')
+const MongoEventRepository = require('./src/infrastructure/repositories/MongoEventRepository')
+const MongoPaymentRepository = require('./src/infrastructure/repositories/MongoPaymentRepository')
+const MongoTicketRepository = require('./src/infrastructure/repositories/MongoTicketRepository')
+const MongoHistoryRepository = require('./src/infrastructure/repositories/MongoHistoryRepository')
+
+// Use Cases
+const Login = require('./src/application/auth/Login')
+const GetVenues = require('./src/application/catalog/GetVenues')
+const GetCategories = require('./src/application/catalog/GetCategories')
+const GetEvents = require('./src/application/event/GetEvents')
+const CreateEventWithTickets = require('./src/application/event/CreateEventWithTickets')
+const UpdateEvent = require('./src/application/event/UpdateEvent')
+const GetTicketsByEvent = require('./src/application/ticket/GetTicketsByEvent')
+const GetTicketById = require('./src/application/ticket/GetTicketById')
+const GetCustomerTickets = require('./src/application/ticket/GetCustomerTickets')
+const PurchaseTicket = require('./src/application/purchase/PurchaseTicket')
+const GetTransactions = require('./src/application/admin/GetTransactions')
+
+// Routes
+const authRoutes = require('./src/interfaces/http/authRoutes')
+const catalogRoutes = require('./src/interfaces/http/catalogRoutes')
+const eventRoutes = require('./src/interfaces/http/eventRoutes')
+const ticketRoutes = require('./src/interfaces/http/ticketRoutes')
+const purchaseRoutes = require('./src/interfaces/http/purchaseRoutes')
+const adminRoutes = require('./src/interfaces/http/adminRoutes')
+
+const { createServer } = require('./src/interfaces/http/server')
+
+const main = async () => {
+  await connect()
+
+  // Repos
+  const userRepo = new MongoUserRepository(UserModel)
+  const venueRepo = new MongoVenueRepository(VenueModel)
+  const categoryRepo = new MongoCategoryRepository(CategoryModel)
+  const eventRepo = new MongoEventRepository(EventModel)
+  const paymentRepo = new MongoPaymentRepository(PaymentModel)
+  const ticketRepo = new MongoTicketRepository(TicketModel)
+  const historyRepo = new MongoHistoryRepository(HistoryModel)
+
+  // Use cases
+  const loginUseCase = new Login(userRepo)
+  const getVenuesUseCase = new GetVenues(venueRepo)
+  const getCategoriesUseCase = new GetCategories(categoryRepo)
+  const getEventsUseCase = new GetEvents(eventRepo)
+  const createEventWithTicketsUseCase = new CreateEventWithTickets(eventRepo, ticketRepo)
+  const updateEventUseCase = new UpdateEvent(eventRepo)
+  const getTicketsByEventUseCase = new GetTicketsByEvent(ticketRepo)
+  const getTicketByIdUseCase = new GetTicketById(ticketRepo)
+  const getCustomerTicketsUseCase = new GetCustomerTickets(ticketRepo)
+  const purchaseTicketUseCase = new PurchaseTicket(paymentRepo, ticketRepo, historyRepo)
+  const getTransactionsUseCase = new GetTransactions(historyRepo)
+
+  // Routers
+  const routers = [
+    authRoutes(loginUseCase),
+    catalogRoutes(getVenuesUseCase, getCategoriesUseCase),
+    eventRoutes(getEventsUseCase, createEventWithTicketsUseCase, updateEventUseCase),
+    ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase),
+    purchaseRoutes(purchaseTicketUseCase),
+    adminRoutes(getTransactionsUseCase),
+  ]
+
+  const app = createServer(routers)
+  app.listen(3000, () => console.log('GoTicket server running on port: 3000 (MongoDB Edition)'))
+}
+
+main().catch(console.error)
+
+
+============================================================
+package.json
+============================================================
+
+{
+  "name": "go-ticket-platform",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "mongoose": "^8.0.0",
+    "morgan": "~1.9.1",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
+
+
+============================================================
+routes/index.js
+============================================================
+
+var express = require('express');
+var router = express.Router();
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+  res.render('index', { title: 'Express' });
+});
+
+module.exports = router;
+
+
+============================================================
+routes/users.js
+============================================================
+
+var express = require('express');
+var router = express.Router();
+
+/* GET users listing. */
+router.get('/', function(req, res, next) {
+  res.send('respond with a resource');
+});
+
+module.exports = router;
+
+
+============================================================
+src/application/admin/GetTransactions.js
+============================================================
+
+class GetTransactions {
+  constructor(historyRepo) {
+    this.historyRepo = historyRepo
+  }
+
+  async execute() {
+    const history = await this.historyRepo.findAllWithDetails()
+    return history.map(h => ({
+      id_history: h._id,
+      action_date: h.action_date,
+      action_type: h.action_type,
+      id_ticket: h.id_ticket ? h.id_ticket._id : 'N/A',
+      row_str: h.id_ticket ? h.id_ticket.row_str : 'N/A',
+      seat_number: h.id_ticket ? h.id_ticket.seat_number : 'N/A',
+      price: h.id_ticket ? h.id_ticket.price : 'N/A',
+      event_title: (h.id_ticket && h.id_ticket.id_event) ? h.id_ticket.id_event.event_title : 'N/A',
+      customer_name: h.id_customer ? h.id_customer.name : 'N/A',
+      customer_email: h.id_customer ? h.id_customer.email : 'N/A',
+      method: (h.id_ticket && h.id_ticket.id_payment) ? h.id_ticket.id_payment.method : 'N/A',
+      operation_code: (h.id_ticket && h.id_ticket.id_payment) ? h.id_ticket.id_payment.operation_code : 'N/A'
+    }))
+  }
+}
+
+module.exports = GetTransactions
+
+
+============================================================
+src/application/auth/Login.js
+============================================================
+
+class Login {
+  constructor(userRepo) {
+    this.userRepo = userRepo
+  }
+
+  async execute({ email, role }) {
+    const user = await this.userRepo.findByEmailAndRole(email, role)
+    if (!user) return null
+    return { token: `${role}-token-xyz`, role, user }
+  }
+}
+
+module.exports = Login
+
+
+============================================================
+src/application/catalog/GetCategories.js
+============================================================
+
+class GetCategories {
+  constructor(categoryRepo) {
+    this.categoryRepo = categoryRepo
+  }
+
+  async execute() {
+    return this.categoryRepo.findAll()
+  }
+}
+
+module.exports = GetCategories
+
+
+============================================================
+src/application/catalog/GetVenues.js
+============================================================
+
+class GetVenues {
+  constructor(venueRepo) {
+    this.venueRepo = venueRepo
+  }
+
+  async execute() {
+    return this.venueRepo.findAll()
+  }
+}
+
+module.exports = GetVenues
+
+
+============================================================
+src/application/event/CreateEventWithTickets.js
+============================================================
+
+const Event = require('../../domain/Event')
+
+class CreateEventWithTickets {
+  constructor(eventRepo, ticketRepo) {
+    this.eventRepo = eventRepo
+    this.ticketRepo = ticketRepo
+  }
+
+  async execute({ id_venue, id_organizer, id_category, event_title, description, image_url, start_date, price_base }) {
+    if (price_base !== undefined && price_base <= 0) throw new Error('El precio base debe ser mayor a 0')
+
+    const event = new Event({ id_venue, id_organizer, id_category, event_title, description, image_url, start_date })
+
+    const newEvent = await this.eventRepo.create(event)
+
+    const rows = ['A', 'B', 'C', 'D']
+    const ticketsToInsert = []
+    rows.forEach(row => {
+      for (let i = 1; i <= 10; i++) {
+        ticketsToInsert.push({
+          id_event: newEvent._id,
+          row_str: row,
+          seat_number: i,
+          price: price_base || 100,
+          status: 'AVAILABLE'
+        })
+      }
+    })
+
+    await this.ticketRepo.insertMany(ticketsToInsert)
+    return { message: 'Evento creado y tickets generados', id_event: newEvent._id }
+  }
+}
+
+module.exports = CreateEventWithTickets
+
+
+============================================================
+src/application/event/GetEvents.js
+============================================================
+
+class GetEvents {
+  constructor(eventRepo) {
+    this.eventRepo = eventRepo
+  }
+
+  async execute() {
+    const events = await this.eventRepo.findAllWithDetails()
+    return events.map(e => ({
+      id_event: e._id,
+      event_title: e.event_title,
+      description: e.description,
+      image_url: e.image_url,
+      start_date: e.start_date,
+      venue_name: e.id_venue ? e.id_venue.name : 'N/A',
+      category_name: e.id_category ? e.id_category.name : 'N/A',
+      organizer_name: e.id_organizer ? e.id_organizer.name : 'N/A'
+    }))
+  }
+}
+
+module.exports = GetEvents
+
+
+============================================================
+src/application/event/UpdateEvent.js
+============================================================
+
+class UpdateEvent {
+  constructor(eventRepo) {
+    this.eventRepo = eventRepo
+  }
+
+  async execute(id, { event_title, description, start_date }) {
+    const updated = await this.eventRepo.updateById(id, { event_title, description, start_date })
+    if (!updated) return null
+    return { message: 'Evento actualizado correctamente' }
+  }
+}
+
+module.exports = UpdateEvent
+
+
+============================================================
+src/application/purchase/PurchaseTicket.js
+============================================================
+
+class PurchaseTicket {
+  constructor(paymentRepo, ticketRepo, historyRepo) {
+    this.paymentRepo = paymentRepo
+    this.ticketRepo = ticketRepo
+    this.historyRepo = historyRepo
+  }
+
+  async execute({ id_customer, id_ticket, total_amount, method, operation_code }) {
+    const newPayment = await this.paymentRepo.create({ total_amount, method, operation_code })
+
+    await this.ticketRepo.updateById(id_ticket, {
+      id_payment: newPayment._id,
+      id_customer,
+      status: 'SOLD'
+    })
+
+    await this.historyRepo.create({
+      id_ticket,
+      id_customer,
+      action_type: 'PURCHASE_COMPLETE',
+      details: `Pago procesado con método: ${method}. Código op: ${operation_code}`
+    })
+
+    return { message: 'Compra realizada con éxito', id_payment: newPayment._id }
+  }
+}
+
+module.exports = PurchaseTicket
+
+
+============================================================
+src/application/ticket/GetCustomerTickets.js
+============================================================
+
+class GetCustomerTickets {
+  constructor(ticketRepo) {
+    this.ticketRepo = ticketRepo
+  }
+
+  async execute(customerId) {
+    const tickets = await this.ticketRepo.findByCustomer(customerId)
+    return tickets.map(t => ({
+      id_ticket: t._id,
+      row_str: t.row_str,
+      seat_number: t.seat_number,
+      price: t.price,
+      event_title: t.id_event ? t.id_event.event_title : 'N/A',
+      start_date: t.id_event ? t.id_event.start_date : 'N/A',
+      image_url: t.id_event ? t.id_event.image_url : '',
+      venue_name: (t.id_event && t.id_event.id_venue) ? t.id_event.id_venue.name : 'N/A'
+    }))
+  }
+}
+
+module.exports = GetCustomerTickets
+
+
+============================================================
+src/application/ticket/GetTicketById.js
+============================================================
+
+class GetTicketById {
+  constructor(ticketRepo) {
+    this.ticketRepo = ticketRepo
+  }
+
+  async execute(ticketId) {
+    const t = await this.ticketRepo.findByIdWithDetails(ticketId)
+    if (!t) return null
+    return {
+      id_ticket: t._id,
+      row_str: t.row_str,
+      seat_number: t.seat_number,
+      price: t.price,
+      status: t.status,
+      event_title: t.id_event ? t.id_event.event_title : 'N/A',
+      start_date: t.id_event ? t.id_event.start_date : 'N/A',
+      image_url: t.id_event ? t.id_event.image_url : '',
+      venue_name: (t.id_event && t.id_event.id_venue) ? t.id_event.id_venue.name : 'N/A',
+      venue_address: (t.id_event && t.id_event.id_venue) ? t.id_event.id_venue.address : 'N/A',
+      customer_name: t.id_customer ? t.id_customer.name : 'N/A',
+      customer_email: t.id_customer ? t.id_customer.email : 'N/A'
+    }
+  }
+}
+
+module.exports = GetTicketById
+
+
+============================================================
+src/application/ticket/GetTicketsByEvent.js
+============================================================
+
+class GetTicketsByEvent {
+  constructor(ticketRepo) {
+    this.ticketRepo = ticketRepo
+  }
+
+  async execute(eventId) {
+    const tickets = await this.ticketRepo.findByEvent(eventId)
+    return tickets.map(t => ({
+      id_ticket: t._id,
+      row_str: t.row_str,
+      seat_number: t.seat_number,
+      price: t.price,
+      status: t.status
+    }))
+  }
+}
+
+module.exports = GetTicketsByEvent
+
+
+============================================================
+src/domain/Category.js
+============================================================
+
+class Category {
+  constructor({ id, name }) {
+    this.id = id
+    this.name = name
+  }
+}
+
+module.exports = Category
+
+
+============================================================
+src/domain/Event.js
+============================================================
+
+class Event {
+  constructor({ id, event_title, description, image_url, start_date, id_venue, id_category, id_organizer }) {
+    if (!event_title) throw new Error('El título del evento es requerido')
+    if (!start_date) throw new Error('La fecha de inicio es requerida')
+    if (!id_venue) throw new Error('El venue es requerido')
+    if (!id_category) throw new Error('La categoría es requerida')
+    if (!id_organizer) throw new Error('El organizador es requerido')
+
+    this.id = id
+    this.event_title = event_title
+    this.description = description
+    this.image_url = image_url
+    this.start_date = new Date(start_date)
+    this.id_venue = id_venue
+    this.id_category = id_category
+    this.id_organizer = id_organizer
+  }
+}
+
+module.exports = Event
+
+
+============================================================
+src/domain/History.js
+============================================================
+
+class History {
+  constructor({ id, id_ticket, id_customer, action_type, action_date, details }) {
+    this.id = id
+    this.id_ticket = id_ticket
+    this.id_customer = id_customer
+    this.action_type = action_type
+    this.action_date = action_date
+    this.details = details
+  }
+}
+
+module.exports = History
+
+
+============================================================
+src/domain/Payment.js
+============================================================
+
+class Payment {
+  constructor({ id, total_amount, payment_date, method, operation_code }) {
+    this.id = id
+    this.total_amount = total_amount
+    this.payment_date = payment_date
+    this.method = method
+    this.operation_code = operation_code
+  }
+}
+
+module.exports = Payment
+
+
+============================================================
+src/domain/Ticket.js
+============================================================
+
+class Ticket {
+  constructor({ id, id_event, id_customer, id_payment, row_str, seat_number, price, status }) {
+    this.id = id
+    this.id_event = id_event
+    this.id_customer = id_customer
+    this.id_payment = id_payment
+    this.row_str = row_str
+    this.seat_number = seat_number
+    this.price = price
+    this.status = status || Ticket.AVAILABLE
+  }
+}
+
+Ticket.AVAILABLE = 'AVAILABLE'
+Ticket.SOLD = 'SOLD'
+
+module.exports = Ticket
+
+
+============================================================
+src/domain/User.js
+============================================================
+
+class User {
+  constructor({ id, email, name, role }) {
+    this.id = id
+    this.email = email
+    this.name = name
+    this.role = role
+  }
+}
+
+module.exports = User
+
+
+============================================================
+src/domain/Venue.js
+============================================================
+
+class Venue {
+  constructor({ id, name, address }) {
+    this.id = id
+    this.name = name
+    this.address = address
+  }
+}
+
+module.exports = Venue
+
+
+============================================================
+src/infrastructure/db/connection.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const mongoURI = 'mongodb://admin:secreta@localhost:27017/goticket_social?authSource=admin'
+
+const connect = async () => {
+  mongoose.set('bufferCommands', false)
+  await mongoose.connect(mongoURI)
+  console.log('¡Conexión exitosa a MongoDB (Contenedor Docker)!')
+}
+
+module.exports = { connect }
+
+
+============================================================
+src/infrastructure/db/models/CategoryModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  name: String
+})
+
+module.exports = mongoose.model('Category', schema)
+
+
+============================================================
+src/infrastructure/db/models/EventModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  event_title: String,
+  description: String,
+  image_url: String,
+  start_date: Date,
+  id_venue: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
+  id_category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+  id_organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+})
+
+module.exports = mongoose.model('Event', schema)
+
+
+============================================================
+src/infrastructure/db/models/HistoryModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  id_ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' },
+  id_customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  action_type: String,
+  action_date: { type: Date, default: Date.now },
+  details: String
+})
+
+module.exports = mongoose.model('History', schema)
+
+
+============================================================
+src/infrastructure/db/models/PaymentModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  total_amount: Number,
+  payment_date: { type: Date, default: Date.now },
+  method: String,
+  operation_code: String
+})
+
+module.exports = mongoose.model('Payment', schema)
+
+
+============================================================
+src/infrastructure/db/models/TicketModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  id_event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+  id_customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  id_payment: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment', default: null },
+  row_str: String,
+  seat_number: Number,
+  price: Number,
+  status: { type: String, default: 'AVAILABLE' }
+})
+
+module.exports = mongoose.model('Ticket', schema)
+
+
+============================================================
+src/infrastructure/db/models/UserModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  email: String,
+  name: String,
+  role: String
+})
+
+module.exports = mongoose.model('User', schema)
+
+
+============================================================
+src/infrastructure/db/models/VenueModel.js
+============================================================
+
+const mongoose = require('mongoose')
+
+const schema = new mongoose.Schema({
+  name: String,
+  address: String
+})
+
+module.exports = mongoose.model('Venue', schema)
+
+
+============================================================
+src/infrastructure/repositories/MongoCategoryRepository.js
+============================================================
+
+class MongoCategoryRepository {
+  constructor(CategoryModel) {
+    this.model = CategoryModel
+  }
+
+  async findAll() {
+    return this.model.find()
+  }
+}
+
+module.exports = MongoCategoryRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoEventRepository.js
+============================================================
+
+class MongoEventRepository {
+  constructor(EventModel) {
+    this.model = EventModel
+  }
+
+  async findAllWithDetails() {
+    return this.model.find()
+      .populate('id_venue', 'name')
+      .populate('id_category', 'name')
+      .sort({ start_date: 1 })
+  }
+
+  async create(data) {
+    return this.model.create(data)
+  }
+
+  async updateById(id, data) {
+    return this.model.findByIdAndUpdate(id, data, { new: true })
+  }
+}
+
+module.exports = MongoEventRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoHistoryRepository.js
+============================================================
+
+class MongoHistoryRepository {
+  constructor(HistoryModel) {
+    this.model = HistoryModel
+  }
+
+  async create(data) {
+    return this.model.create(data)
+  }
+
+  async findAllWithDetails() {
+    return this.model.find()
+      .populate({ path: 'id_ticket', populate: { path: 'id_event id_payment' } })
+      .populate('id_customer')
+      .sort({ action_date: -1 })
+  }
+}
+
+module.exports = MongoHistoryRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoPaymentRepository.js
+============================================================
+
+class MongoPaymentRepository {
+  constructor(PaymentModel) {
+    this.model = PaymentModel
+  }
+
+  async create(data) {
+    return this.model.create(data)
+  }
+}
+
+module.exports = MongoPaymentRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoTicketRepository.js
+============================================================
+
+class MongoTicketRepository {
+  constructor(TicketModel) {
+    this.model = TicketModel
+  }
+
+  async findByEvent(eventId) {
+    return this.model.find({ id_event: eventId })
+  }
+
+  async findByIdWithDetails(ticketId) {
+    return this.model.findById(ticketId)
+      .populate({ path: 'id_event', populate: { path: 'id_venue' } })
+      .populate('id_customer')
+  }
+
+  async insertMany(tickets) {
+    return this.model.insertMany(tickets)
+  }
+
+  async updateById(id, data) {
+    return this.model.findByIdAndUpdate(id, data)
+  }
+
+  async findByCustomer(customerId) {
+    return this.model.find({ id_customer: customerId, status: 'SOLD' })
+      .populate({ path: 'id_event', populate: { path: 'id_venue' } })
+      .sort({ _id: -1 })
+  }
+}
+
+module.exports = MongoTicketRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoUserRepository.js
+============================================================
+
+class MongoUserRepository {
+  constructor(UserModel) {
+    this.model = UserModel
+  }
+
+  async findByEmailAndRole(email, role) {
+    return this.model.findOne({ email, role })
+  }
+}
+
+module.exports = MongoUserRepository
+
+
+============================================================
+src/infrastructure/repositories/MongoVenueRepository.js
+============================================================
+
+class MongoVenueRepository {
+  constructor(VenueModel) {
+    this.model = VenueModel
+  }
+
+  async findAll() {
+    return this.model.find()
+  }
+}
+
+module.exports = MongoVenueRepository
+
+
+============================================================
+src/infrastructure/swagger/swaggerSpec.js
+============================================================
+
+const swaggerSpec = {
+  openapi: '3.0.0',
+  info: {
+    title: 'GoTicket API',
+    version: '1.0.0',
+    description: 'API for the GoTicket platform'
+  },
+  paths: {
+    '/api/auth/login': {
+      post: {
+        summary: 'Login user',
+        tags: ['Auth'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  email: { type: 'string', example: 'user@example.com' },
+                  role: { type: 'string', example: 'customer' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Login successful' },
+          401: { description: 'User not found' }
+        }
+      }
+    },
+    '/api/venues': {
+      get: {
+        summary: 'List all venues',
+        tags: ['Catalog'],
+        responses: { 200: { description: 'List of venues' } }
+      }
+    },
+    '/api/categories': {
+      get: {
+        summary: 'List all categories',
+        tags: ['Catalog'],
+        responses: { 200: { description: 'List of categories' } }
+      }
+    },
+    '/api/events': {
+      get: {
+        summary: 'List all events',
+        tags: ['Events'],
+        responses: { 200: { description: 'List of events' } }
+      }
+    },
+    '/api/admin/events-with-tickets': {
+      post: {
+        summary: 'Create event and auto-generate tickets',
+        tags: ['Events'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id_venue: { type: 'string', example: '64a1f...' },
+                  id_organizer: { type: 'string', example: '64a1f...' },
+                  id_category: { type: 'string', example: '64a1f...' },
+                  event_title: { type: 'string', example: 'Rock Concert' },
+                  description: { type: 'string', example: 'A great concert' },
+                  image_url: { type: 'string', example: 'https://...' },
+                  start_date: { type: 'string', format: 'date-time', example: '2026-08-01T20:00:00Z' },
+                  price_base: { type: 'number', example: 150 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Event created and tickets generated' } }
+      }
+    },
+    '/api/events/{id}': {
+      put: {
+        summary: 'Update an event',
+        tags: ['Events'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  event_title: { type: 'string' },
+                  description: { type: 'string' },
+                  start_date: { type: 'string', format: 'date-time' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Event updated' },
+          404: { description: 'Event not found' }
+        }
+      }
+    },
+    '/api/events/{id}/tickets': {
+      get: {
+        summary: 'Get tickets for an event',
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of tickets for the event' } }
+      }
+    },
+    '/api/tickets/{id}': {
+      get: {
+        summary: 'Get ticket detail',
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Ticket detail' },
+          404: { description: 'Ticket not found' }
+        }
+      }
+    },
+    '/api/purchase': {
+      post: {
+        summary: 'Purchase a ticket',
+        tags: ['Purchase'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id_customer: { type: 'string', example: '64a1f...' },
+                  id_ticket: { type: 'string', example: '64a1f...' },
+                  total_amount: { type: 'number', example: 150 },
+                  method: { type: 'string', example: 'credit_card' },
+                  operation_code: { type: 'string', example: 'OP-12345' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Purchase successful' } }
+      }
+    },
+    '/api/admin/transactions': {
+      get: {
+        summary: 'List all transactions (admin)',
+        tags: ['Admin'],
+        responses: { 200: { description: 'List of transactions' } }
+      }
+    },
+    '/api/customer/{id}/tickets': {
+      get: {
+        summary: "Get customer's purchased tickets",
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: "Customer's ticket list" } }
+      }
+    }
+  }
+}
+
+module.exports = swaggerSpec
+
+
+============================================================
+src/interfaces/http/adminRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (getTransactionsUseCase) => {
+  const router = Router()
+
+  router.get('/admin/transactions', async (req, res) => {
+    try {
+      res.json(await getTransactionsUseCase.execute())
+    } catch {
+      res.status(500).json({ error: 'Error al obtener el historial' })
+    }
+  })
+
+  return router
+}
+
+
+============================================================
+src/interfaces/http/authRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (loginUseCase) => {
+  const router = Router()
+
+  router.post('/auth/login', async (req, res) => {
+    try {
+      const result = await loginUseCase.execute(req.body)
+      if (!result) return res.status(401).json({ error: 'Usuario no encontrado en la base de datos' })
+      res.json(result)
+    } catch {
+      res.status(500).json({ error: 'Error en BD' })
+    }
+  })
+
+  return router
+}
+
+
+============================================================
+src/interfaces/http/catalogRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (getVenuesUseCase, getCategoriesUseCase) => {
+  const router = Router()
+
+  router.get('/venues', async (req, res) => {
+    try {
+      res.json(await getVenuesUseCase.execute())
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  router.get('/categories', async (req, res) => {
+    try {
+      res.json(await getCategoriesUseCase.execute())
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  return router
+}
+
+
+============================================================
+src/interfaces/http/eventRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (getEventsUseCase, createEventWithTicketsUseCase, updateEventUseCase) => {
+  const router = Router()
+
+  router.get('/events', async (req, res) => {
+    try {
+      console.log('-> Llamando a /api/events')
+      res.json(await getEventsUseCase.execute())
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  router.post('/admin/events-with-tickets', async (req, res) => {
+    const { event_title, start_date, id_venue, id_category, id_organizer } = req.body
+
+    if (!event_title || !start_date || !id_venue || !id_category || !id_organizer) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: event_title, start_date, id_venue, id_category, id_organizer' })
+    }
+
+    try {
+      res.json(await createEventWithTicketsUseCase.execute(req.body))
+    } catch (err) {
+      res.status(400).json({ error: err.message })
+    }
+  })
+
+  router.put('/events/:id', async (req, res) => {
+    try {
+      const result = await updateEventUseCase.execute(req.params.id, req.body)
+      if (!result) return res.status(404).json({ message: 'Evento no encontrado' })
+      res.json(result)
+    } catch {
+      res.status(500).json({ error: 'Error al actualizar' })
+    }
+  })
+
+  return router
+}
+
+
+============================================================
+src/interfaces/http/purchaseRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (purchaseTicketUseCase) => {
+  const router = Router()
+
+  router.post('/purchase', async (req, res) => {
+    try {
+      res.json(await purchaseTicketUseCase.execute(req.body))
+    } catch (err) {
+      res.status(500).json({ error: 'Error procesando la compra', details: err.message })
+    }
+  })
+
+  return router
+}
+
+
+============================================================
+src/interfaces/http/server.js
+============================================================
+
+const express = require('express')
+const cors = require('cors')
+const path = require('path')
+const swaggerUi = require('swagger-ui-express')
+const swaggerSpec = require('../../infrastructure/swagger/swaggerSpec')
+
+const createServer = (routers) => {
+  const app = express()
+  app.use(cors())
+  app.use(express.json())
+  app.use(express.static(path.join(__dirname, '../../../public')))
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../../public', 'index.html'))
+  })
+
+  routers.forEach(router => app.use('/api', router))
+
+  return app
+}
+
+module.exports = { createServer }
+
+
+============================================================
+src/interfaces/http/ticketRoutes.js
+============================================================
+
+const { Router } = require('express')
+
+module.exports = (getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase) => {
+  const router = Router()
+
+  router.get('/events/:id/tickets', async (req, res) => {
+    try {
+      res.json(await getTicketsByEventUseCase.execute(req.params.id))
+    } catch {
+      res.status(500).json({ error: 'Error en la consulta' })
+    }
+  })
+
+  router.get('/tickets/:id', async (req, res) => {
+    try {
+      const result = await getTicketByIdUseCase.execute(req.params.id)
+      if (!result) return res.status(404).json({ message: 'Ticket no encontrado' })
+      res.json(result)
+    } catch {
+      res.status(500).json({ error: 'Error en la consulta del ticket' })
+    }
+  })
+
+  router.get('/customer/:id/tickets', async (req, res) => {
+    try {
+      res.json(await getCustomerTicketsUseCase.execute(req.params.id))
+    } catch {
+      res.status(500).json({ error: 'Error al obtener mis entradas' })
+    }
+  })
+
+  return router
+}
+
+

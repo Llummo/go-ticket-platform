@@ -22,6 +22,7 @@ const MongoHistoryRepository = require('./src/infrastructure/repositories/MongoH
 
 // Use Cases
 const Login = require('./src/application/auth/Login')
+const Register = require('./src/application/auth/Register')
 const GetVenues = require('./src/application/catalog/GetVenues')
 const GetCategories = require('./src/application/catalog/GetCategories')
 const GetEvents = require('./src/application/event/GetEvents')
@@ -57,6 +58,7 @@ const main = async () => {
 
   // Use cases
   const loginUseCase = new Login(userRepo)
+  const registerUseCase = new Register(userRepo)
   const getVenuesUseCase = new GetVenues(venueRepo)
   const getCategoriesUseCase = new GetCategories(categoryRepo)
   const getEventsUseCase = new GetEvents(eventRepo)
@@ -70,7 +72,7 @@ const main = async () => {
 
   // Routers
   const routers = [
-    authRoutes(loginUseCase),
+    authRoutes(loginUseCase, registerUseCase),
     catalogRoutes(getVenuesUseCase, getCategoriesUseCase),
     eventRoutes(getEventsUseCase, createEventWithTicketsUseCase, updateEventUseCase),
     ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase),
