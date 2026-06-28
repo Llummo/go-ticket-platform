@@ -150,6 +150,17 @@ const swaggerSpec = {
           400: { description: 'ID de ticket inválido' },
           404: { description: 'Ticket no encontrado' }
         }
+      },
+      delete: {
+        summary: 'Eliminar un ticket del catálogo (Solo si no está vendido)',
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del ticket a eliminar', schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Ticket eliminado con éxito' },
+          400: { description: 'ID de ticket inválido' },
+          404: { description: 'El ticket no existe' },
+          422: { description: 'Regla de negocio rota (El ticket ya está vendido y no se puede borrar)' }
+        }
       }
     },
     '/api/customer/{id}/tickets': {
