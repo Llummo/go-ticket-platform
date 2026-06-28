@@ -1,7 +1,7 @@
 # GoTicket Platform
 
 A Node.js + Express + MongoDB ticket sales platform built with a lightweight DDD (Domain-Driven Design) architecture.
-
+This project is educational oriented in its totallity, also, since the idea is relatively simple and due to time constraints, as stated above, the architecture is a bit chopped.
 ---
 
 ## Architecture
