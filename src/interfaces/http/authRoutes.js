@@ -1,15 +1,23 @@
 const { Router } = require('express')
 
-module.exports = (loginUseCase) => {
+module.exports = (loginUseCase, registerUseCase) => {
   const router = Router()
 
   router.post('/auth/login', async (req, res) => {
     try {
       const result = await loginUseCase.execute(req.body)
-      if (!result) return res.status(401).json({ error: 'Usuario no encontrado en la base de datos' })
       res.json(result)
-    } catch {
-      res.status(500).json({ error: 'Error en BD' })
+    } catch (err) {
+      res.status(401).json({ error: err.message })
+    }
+  })
+
+  router.post('/auth/register', async (req, res) => {
+    try {
+      const result = await registerUseCase.execute(req.body)
+      res.status(201).json({ message: 'Usuario registrado con éxito', user: result })
+    } catch (err) {
+      res.status(400).json({ error: err.message })
     }
   })
 

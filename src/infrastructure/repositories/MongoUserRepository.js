@@ -3,8 +3,12 @@ class MongoUserRepository {
     this.model = UserModel
   }
 
-  async findByEmailAndRole(email, role) {
-    return this.model.findOne({ email, role })
+  async findByEmail(email) {
+    return this.model.findOne({ email })
+  }
+
+  async create(userData) {
+    return this.model.create(userData)
   }
 }
 
