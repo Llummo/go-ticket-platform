@@ -30,6 +30,31 @@ const swaggerSpec = {
         }
       }
     },
+    '/api/auth/register': {
+      post: {
+        summary: 'Register new client',
+        tags: ['Auth'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  email: { type: 'string', example: 'nuevo@cliente.com' },
+                  name: { type: 'string', example: 'Juan Pérez' },
+                  password: { type: 'string', example: '123456' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Usuario registrado con éxito' },
+          400: { description: 'Error de validación o correo duplicado' }
+        }
+      }
+    },
     '/api/venues': {
       get: {
         summary: 'List all venues',
@@ -209,6 +234,41 @@ const swaggerSpec = {
         summary: 'List all transactions (admin)',
         tags: ['Admin'],
         responses: { 200: { description: 'List of transactions' } }
+      }
+    },
+    '/api/customer/{id}/tickets': {
+      get: {
+        summary: "Get customer's purchased tickets",
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: "Customer's ticket list" } }
+      }
+    },
+    '/api/events/{id}/posts': {
+      get: {
+        summary: 'Get event forum posts',
+        tags: ['Social'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of posts' } }
+      },
+      post: {
+        summary: 'Create a new post/review',
+        tags: ['Social'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  content: { type: 'string', example: 'Amazing concert!' },
+                  rating: { type: 'number', example: 5 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Post created successfully' } }
       }
     }
   }
