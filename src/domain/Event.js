@@ -10,7 +10,10 @@ class Event {
     this.event_title = event_title
     this.description = description
     this.image_url = image_url
-    this.start_date = new Date(start_date)
+    const parsedDate = new Date(start_date)
+    if (isNaN(parsedDate.getTime())) throw new Error('La fecha de inicio no es válida')
+    if (parsedDate <= new Date()) throw new Error('La fecha de inicio debe ser una fecha futura')
+    this.start_date = parsedDate
     this.id_venue = id_venue
     this.id_category = id_category
     this.id_organizer = id_organizer
