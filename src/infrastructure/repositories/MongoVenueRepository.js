@@ -4,7 +4,7 @@ class MongoVenueRepository {
   }
 
   async findAll() {
-    return this.model.find()
+    return await this.model.find()
   }
 }
 

@@ -4,7 +4,7 @@ class MongoCategoryRepository {
   }
 
   async findAll() {
-    return this.model.find()
+    return await this.model.find()
   }
 }
 

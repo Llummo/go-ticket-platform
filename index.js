@@ -36,6 +36,10 @@ const GetTicketById = require('./src/application/ticket/GetTicketById')
 const GetCustomerTickets = require('./src/application/ticket/GetCustomerTickets')
 const PurchaseTicket = require('./src/application/purchase/PurchaseTicket')
 const GetTransactions = require('./src/application/admin/GetTransactions')
+
+const CreateTicket = require('./src/application/ticket/CreateTicket')
+const DeleteTicket = require('./src/application/ticket/DeleteTicket')
+
 const CreatePost = require('./src/application/social/CreatePost')
 const GetEventFeed = require('./src/application/social/GetEventFeed')
 const GetUserProfile = require('./src/application/social/GetUserProfile')
@@ -93,6 +97,10 @@ const main = async () => {
   const getCustomerTicketsUseCase = new GetCustomerTickets(ticketRepo)
   const purchaseTicketUseCase = new PurchaseTicket(paymentRepo, ticketRepo, historyRepo)
   const getTransactionsUseCase = new GetTransactions(historyRepo)
+
+  const createTicketUseCase = new CreateTicket(ticketRepo, eventRepo) // <-- AGREGAR (necesita eventRepo para validar que el evento exista)
+  const deleteTicketUseCase = new DeleteTicket(ticketRepo)
+
   const createPostUseCase = new CreatePost(postRepo)
   const getEventFeedUseCase = new GetEventFeed(postRepo)
   const getUserProfileUseCase = new GetUserProfile(userRepo, postRepo)
@@ -102,7 +110,7 @@ const main = async () => {
     authRoutes(loginUseCase, registerUseCase),
     catalogRoutes(getVenuesUseCase, getCategoriesUseCase),
     eventRoutes(getEventsUseCase, createEventWithTicketsUseCase, updateEventUseCase),
-    ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase),
+    ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase, createTicketUseCase, deleteTicketUseCase),
     purchaseRoutes(purchaseTicketUseCase),
     adminRoutes(getTransactionsUseCase),
     socialRoutes(createPostUseCase, getEventFeedUseCase, getUserProfileUseCase)

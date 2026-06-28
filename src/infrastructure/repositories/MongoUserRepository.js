@@ -9,6 +9,7 @@ class MongoUserRepository {
 
   async create(userData) {
     return this.model.create(userData)
+
   }
 }
 
