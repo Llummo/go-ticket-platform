@@ -108,18 +108,71 @@ const swaggerSpec = {
       get: {
         summary: 'Get tickets for an event',
         tags: ['Tickets'],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { 200: { description: 'List of tickets for the event' } }
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del evento (24 caracteres hex)', schema: { type: 'string' } }],
+        responses: { 
+          200: { description: 'List of tickets for the event' },
+          400: { description: 'ID de evento inválido' }
+        }
       }
     },
     '/api/tickets/{id}': {
       get: {
         summary: 'Get ticket detail',
         tags: ['Tickets'],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del ticket (24 caracteres hex)', schema: { type: 'string' } }],
         responses: {
-          200: { description: 'Ticket detail' },
-          404: { description: 'Ticket not found' }
+          200: { description: 'Ticket detail rehidratado y formateado' },
+          400: { description: 'ID de ticket inválido' },
+          404: { description: 'Ticket no encontrado' }
+        }
+      }
+    },
+    '/api/customer/{id}/tickets': {
+      get: {
+        summary: "Get customer's purchased tickets",
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del cliente (24 caracteres hex)', schema: { type: 'string' } }],
+        responses: { 
+          200: { description: "Customer's ticket list" },
+          400: { description: 'ID de cliente inválido' }
+        }
+      },
+      delete: {
+        summary: 'Remove a ticket from the catalog',
+        tags: ['Tickets'],
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del ticket a eliminar', schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Ticket eliminado con éxito' },
+          400: { description: 'ID de ticket inválido' },
+          404: { description: 'El ticket no existe' },
+          422: { description: 'Regla de negocio rota (El ticket ya está vendido y no se puede borrar)' }
+        }
+      }
+    },
+    '/api/tickets': {
+      post: {
+        summary: 'Create a new ticket manually',
+        tags: ['Tickets'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id_event: { type: 'string', example: '64a1ff93b425ca2a38af1b8a' },
+                  row_str: { type: 'string', example: 'A' },
+                  seat_number: { type: 'number', example: 12 },
+                  price: { type: 'number', example: 75.50 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Ticket creado de manera exitosa' },
+          400: { description: 'Faltan campos obligatorios o formato inválido' },
+          422: { description: 'Error de negocio (Monto negativo o asiento duplicado)' }
         }
       }
     },
@@ -134,8 +187,8 @@ const swaggerSpec = {
               schema: {
                 type: 'object',
                 properties: {
-                  id_customer: { type: 'string', example: '64a1f...' },
-                  id_ticket: { type: 'string', example: '64a1f...' },
+                  id_customer: { type: 'string', example: '64a1ff93b425ca2a38af1b8a' },
+                  id_ticket: { type: 'string', example: '64a1ff93b425ca2a38af1b8b' },
                   total_amount: { type: 'number', example: 150 },
                   method: { type: 'string', example: 'credit_card' },
                   operation_code: { type: 'string', example: 'OP-12345' }
@@ -144,7 +197,11 @@ const swaggerSpec = {
             }
           }
         },
-        responses: { 200: { description: 'Purchase successful' } }
+        responses: { 
+          201: { description: 'Purchase successful' },
+          400: { description: 'Faltan parámetros obligatorios' },
+          422: { description: 'Error de validación (Monto incorrecto o ticket vendido)' }
+        }
       }
     },
     '/api/admin/transactions': {
@@ -153,16 +210,8 @@ const swaggerSpec = {
         tags: ['Admin'],
         responses: { 200: { description: 'List of transactions' } }
       }
-    },
-    '/api/customer/{id}/tickets': {
-      get: {
-        summary: "Get customer's purchased tickets",
-        tags: ['Tickets'],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { 200: { description: "Customer's ticket list" } }
-      }
     }
   }
 }
 
-module.exports = swaggerSpec
+module.exports = swaggerSpec;
