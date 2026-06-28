@@ -32,6 +32,8 @@ const GetTicketById = require('./src/application/ticket/GetTicketById')
 const GetCustomerTickets = require('./src/application/ticket/GetCustomerTickets')
 const PurchaseTicket = require('./src/application/purchase/PurchaseTicket')
 const GetTransactions = require('./src/application/admin/GetTransactions')
+const CreateTicket = require('./src/application/ticket/CreateTicket')
+const DeleteTicket = require('./src/application/ticket/DeleteTicket')
 
 // Routes
 const authRoutes = require('./src/interfaces/http/authRoutes')
@@ -67,13 +69,14 @@ const main = async () => {
   const getCustomerTicketsUseCase = new GetCustomerTickets(ticketRepo)
   const purchaseTicketUseCase = new PurchaseTicket(paymentRepo, ticketRepo, historyRepo)
   const getTransactionsUseCase = new GetTransactions(historyRepo)
-
-  // Routers
+  const createTicketUseCase = new CreateTicket(ticketRepo, eventRepo) // <-- AGREGAR (necesita eventRepo para validar que el evento exista)
+  const deleteTicketUseCase = new DeleteTicket(ticketRepo)
+  
   const routers = [
     authRoutes(loginUseCase),
     catalogRoutes(getVenuesUseCase, getCategoriesUseCase),
     eventRoutes(getEventsUseCase, createEventWithTicketsUseCase, updateEventUseCase),
-    ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase),
+    ticketRoutes(getTicketsByEventUseCase, getTicketByIdUseCase, getCustomerTicketsUseCase, createTicketUseCase, deleteTicketUseCase),
     purchaseRoutes(purchaseTicketUseCase),
     adminRoutes(getTransactionsUseCase),
   ]

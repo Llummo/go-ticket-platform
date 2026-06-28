@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
-const mongoURI = 'mongodb://admin:secreta@localhost:27017/goticket_social?authSource=admin'
-
+//const mongoURI = 'mongodb://admin:secreta@localhost:27017/goticket_social?authSource=admin'
+const mongoURI = 'mongodb://localhost:27017/goticket_social';
 const connect = async () => {
   mongoose.set('bufferCommands', false)
   await mongoose.connect(mongoURI)
